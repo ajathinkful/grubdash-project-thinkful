@@ -19,7 +19,10 @@ function create(req, res, next) {
   if (!price) {
     return next({ status: 400, message: "Dish must include a price" });
   } else if (price <= 0) {
-    return next({ status: 400, message: "Dish price must be greater than zero" });
+    return next({
+      status: 400,
+      message: "Dish price must be greater than zero",
+    });
   }
 
   if (!image_url) {
@@ -33,6 +36,8 @@ function create(req, res, next) {
     price,
     image_url,
   };
+
+  res.locals.newDish = newDish;
 
   dishes.push(newDish);
   res.status(201).json({ data: newDish });
@@ -48,46 +53,6 @@ function read(req, res, next) {
   }
 }
 
-// function update(req, res, next) {
-//   const { dishId } = req.params;
-//   const { data: { id, name, description, price, image_url } = {} } = req.body;
-
-//   const foundDish = dishes.find((dish) => dish.id === dishId);
-
-//   if (!foundDish) {
-//     return next({ status: 404, message: `Dish does not exist: ${dishId}` });
-//   }
-
-//   if (id && id !== dishId) {
-//     return next({ status: 400, message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}` });
-//   }
-
-//   if (!name) {
-//     return next({ status: 400, message: "Dish must include a name" });
-//   }
-
-//   if (!description) {
-//       return next({ status: 400, message: "Dish must include a description" });
-//     }
-
-//     if (!price) {
-//       return next({ status: 400, message: "Dish must include a price" });
-//     } else if (price <= 0) {
-//       return next({ status: 400, message: "Dish price must be greater than zero" });
-//     }
-
-//       if (!image_url) {
-//         return next({ status: 400, message: "Dish must include an image_url" });
-//         }
-
-//         foundDish.name = name;
-//         foundDish.description = description;
-//         foundDish.price = price;
-//         foundDish.image_url = image_url;
-
-//         res.json({ data: foundDish });
-//       }
-
 function update(req, res, next) {
   const { dishId } = req.params;
   const { data: { id, name, description, price, image_url } = {} } = req.body;
@@ -99,7 +64,10 @@ function update(req, res, next) {
   }
 
   if (id && id !== dishId) {
-    return next({ status: 400, message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}` });
+    return next({
+      status: 400,
+      message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`,
+    });
   }
 
   if (!name) {
@@ -110,17 +78,28 @@ function update(req, res, next) {
     return next({ status: 400, message: "Dish must include a description" });
   }
 
-  if (typeof price === 'string') {
+  if (typeof price === "string") {
     return next({ status: 400, message: "Dish price must be a valid number" });
   }
 
   if (isNaN(Number(price)) || Number(price) <= 0) {
-    return next({ status: 400, message: "Dish price must be a valid number greater than zero" });
+    return next({
+      status: 400,
+      message: "Dish price must be a valid number greater than zero",
+    });
   }
 
   if (!image_url) {
     return next({ status: 400, message: "Dish must include an image_url" });
   }
+
+  res.locals.updatedDish = {
+    ...foundDish,
+    name: name || foundDish.name,
+    description: description || foundDish.description,
+    price: price || foundDish.price,
+    image_url: image_url || foundDish.image_url,
+  };
 
   foundDish.name = name;
   foundDish.description = description;
@@ -129,8 +108,6 @@ function update(req, res, next) {
 
   res.json({ data: foundDish });
 }
-
-
 
 module.exports = {
   list,

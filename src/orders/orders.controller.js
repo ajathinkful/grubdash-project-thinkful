@@ -2,6 +2,7 @@ const orders = require("../data/orders-data");
 const nextId = require("../utils/nextId");
 
 function list(req, res, next) {
+  res.locals.orders = orders; // Store orders in res.locals
   res.json({ data: orders });
 }
 
@@ -9,20 +10,32 @@ function create(req, res, next) {
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
 
   if (!deliverTo) {
-    return next({ status: 400, message: "Order must include a deliverTo field" });
+    return next({
+      status: 400,
+      message: "Order must include a deliverTo field",
+    });
   }
 
   if (!mobileNumber) {
-    return next({ status: 400, message: "Order must include a mobileNumber field" });
+    return next({
+      status: 400,
+      message: "Order must include a mobileNumber field",
+    });
   }
 
   if (!dishes || !Array.isArray(dishes) || dishes.length === 0) {
-    return next({ status: 400, message: "Order must include at least one dish" });
+    return next({
+      status: 400,
+      message: "Order must include at least one dish",
+    });
   }
 
   for (const [index, dish] of dishes.entries()) {
     if (!dish.quantity || !Number.isInteger(dish.quantity)) {
-      return next({ status: 400, message: `Dish at index ${index} must have a valid integer quantity` });
+      return next({
+        status: 400,
+        message: `Dish at index ${index} must have a valid integer quantity`,
+      });
     }
   }
 
@@ -35,14 +48,15 @@ function create(req, res, next) {
   };
 
   orders.push(newOrder);
+  res.locals.newOrder = newOrder; // Store newOrder in res.locals
   res.status(201).json({ data: newOrder });
 }
-
 
 function read(req, res, next) {
   const { orderId } = req.params;
   const foundOrder = orders.find((order) => order.id === orderId);
   if (foundOrder) {
+    res.locals.foundOrder = foundOrder; // Store foundOrder in res.locals
     res.json({ data: foundOrder });
   } else {
     next({ status: 404, message: `Order does not exist: ${orderId}` });
@@ -51,7 +65,8 @@ function read(req, res, next) {
 
 function update(req, res, next) {
   const { orderId } = req.params;
-  const { data: { id, deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+  const { data: { id, deliverTo, mobileNumber, status, dishes } = {} } =
+    req.body;
 
   const foundOrder = orders.find((order) => order.id === orderId);
 
@@ -60,28 +75,50 @@ function update(req, res, next) {
   }
 
   if (id && id !== orderId) {
-    return next({ status: 400, message: `Order id does not match route id. Order: ${id}, Route: ${orderId}` });
+    return next({
+      status: 400,
+      message: `Order id does not match route id. Order: ${id}, Route: ${orderId}`,
+    });
   }
 
   if (!deliverTo) {
-    return next({ status: 400, message: "Order must include a deliverTo field" });
+    return next({
+      status: 400,
+      message: "Order must include a deliverTo field",
+    });
   }
 
   if (!mobileNumber) {
-    return next({ status: 400, message: "Order must include a mobileNumber field" });
+    return next({
+      status: 400,
+      message: "Order must include a mobileNumber field",
+    });
   }
 
-  if (!status || !["pending", "preparing", "out-for-delivery", "delivered"].includes(status)) {
-    return next({ status: 400, message: "Order must include a valid status (pending, preparing, out-for-delivery, delivered)" });
+  if (
+    !status ||
+    !["pending", "preparing", "out-for-delivery", "delivered"].includes(status)
+  ) {
+    return next({
+      status: 400,
+      message:
+        "Order must include a valid status (pending, preparing, out-for-delivery, delivered)",
+    });
   }
 
   if (!dishes || !Array.isArray(dishes) || dishes.length === 0) {
-    return next({ status: 400, message: "Order must include at least one dish" });
+    return next({
+      status: 400,
+      message: "Order must include at least one dish",
+    });
   }
 
   for (const [index, dish] of dishes.entries()) {
     if (!dish.quantity || !Number.isInteger(dish.quantity)) {
-      return next({ status: 400, message: `Dish at index ${index} must have a valid integer quantity` });
+      return next({
+        status: 400,
+        message: `Dish at index ${index} must have a valid integer quantity`,
+      });
     }
   }
 
@@ -90,9 +127,9 @@ function update(req, res, next) {
   foundOrder.status = status;
   foundOrder.dishes = dishes;
 
+  res.locals.updatedOrder = foundOrder; // Store updatedOrder in res.locals
   res.json({ data: foundOrder });
 }
-
 
 function destroy(req, res, next) {
   const { orderId } = req.params;
@@ -100,7 +137,10 @@ function destroy(req, res, next) {
 
   if (index > -1) {
     if (orders[index].status !== "pending") {
-      return next({ status: 400, message: "An order cannot be deleted unless it is pending." });
+      return next({
+        status: 400,
+        message: "An order cannot be deleted unless it is pending.",
+      });
     }
     orders.splice(index, 1);
     res.sendStatus(204);
